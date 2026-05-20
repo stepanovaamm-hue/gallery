@@ -48,27 +48,48 @@ function useRevealOnScroll() {
   }, []);
 }
 
-function PortalScene() {
+function HeroScene() {
   return (
     <div className="hero-scene" aria-hidden="true">
       <img className="hero-illustration" src={visualAssets.hero} alt="" />
-      <div className="star-field" />
-      <div className="portal portal-one" />
-      <div className="portal portal-two" />
-      <div className="signal-lines">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <span key={index} style={{ '--delay': `${index * 0.22}s` }} />
+      <div className="hero-aurora" />
+      <div className="hero-pathways">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="hero-particles">
+        {Array.from({ length: 16 }).map((_, index) => (
+          <span key={index} />
         ))}
       </div>
-      <div className="ai-constellation">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <i key={index} style={{ '--node': index }} />
-        ))}
+    </div>
+  );
+}
+
+function HeroShowcase() {
+  return (
+    <div className="hero-showcase" data-reveal aria-hidden="true">
+      <div className="hero-portal-shell">
+        <div className="hero-portal-rim" />
+        <div className="hero-portal-window">
+          <img src={visualAssets.gallery} alt="" />
+          <div className="hero-portal-sheen" />
+        </div>
+        <div className="hero-art-card hero-art-card-one">
+          <img src={visualAssets.comic} alt="" />
+        </div>
+        <div className="hero-art-card hero-art-card-two">
+          <img src={visualAssets.story} alt="" />
+        </div>
+        <div className="hero-art-card hero-art-card-three">
+          <img src={visualAssets.gallery} alt="" />
+        </div>
       </div>
-      <div className="future-city">
-        {Array.from({ length: 18 }).map((_, index) => (
-          <span key={index} style={{ '--h': `${42 + ((index * 19) % 92)}px` }} />
-        ))}
+      <div className="hero-holo-panel">
+        <span />
+        <span />
+        <span />
       </div>
     </div>
   );
@@ -247,10 +268,10 @@ export default function App() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">
-      <section id="top" className="relative min-h-[92svh] overflow-hidden">
-        <PortalScene />
-        <div className="relative z-10 mx-auto flex min-h-[92svh] max-w-7xl flex-col justify-center px-5 py-20 sm:px-8 lg:px-10">
-          <div className="max-w-4xl" data-reveal>
+      <section id="top" className="hero-section">
+        <HeroScene />
+        <div className="hero-content">
+          <div className="hero-copy" data-reveal>
             <p className="eyebrow">Будущее с ПравоТех глазами детей</p>
             <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
               Виртуальная галерея будущего
@@ -267,7 +288,13 @@ export default function App() {
                 О проекте
               </a>
             </div>
+            <div className="hero-metrics" aria-label="Краткая информация о выставке">
+              <span>6 работ</span>
+              <span>3 номинации</span>
+              <span>День защиты детей</span>
+            </div>
           </div>
+          <HeroShowcase />
         </div>
       </section>
 
