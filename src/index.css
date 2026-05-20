@@ -124,11 +124,37 @@ a {
   transform: perspective(560px) rotateX(62deg) translateY(10%);
   transform-origin: bottom;
   opacity: 0.5;
+  z-index: 3;
+}
+
+.hero-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(7, 9, 20, 0.9) 0%, rgba(7, 9, 20, 0.58) 42%, rgba(7, 9, 20, 0.18) 100%),
+    linear-gradient(180deg, rgba(7, 9, 20, 0.08), rgba(7, 9, 20, 0.72));
+}
+
+.hero-illustration {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.92;
+  transform: scale(1.03);
+  filter: saturate(1.1) contrast(1.04);
+  animation: cinematicFloat 15s ease-in-out infinite;
 }
 
 .star-field {
   position: absolute;
   inset: 0;
+  z-index: 4;
   background:
     radial-gradient(circle at 12% 22%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
     radial-gradient(circle at 24% 68%, rgba(143, 255, 203, 0.8) 0 1px, transparent 2px),
@@ -140,6 +166,7 @@ a {
 
 .portal {
   position: absolute;
+  z-index: 5;
   border: 1px solid rgba(110, 231, 249, 0.4);
   border-radius: 50%;
   filter: drop-shadow(0 0 22px rgba(110, 231, 249, 0.24));
@@ -180,6 +207,7 @@ a {
 .signal-lines {
   position: absolute;
   inset: 0;
+  z-index: 5;
   pointer-events: none;
 }
 
@@ -196,6 +224,7 @@ a {
 
 .ai-constellation {
   position: absolute;
+  z-index: 5;
   left: 62%;
   top: 28%;
   width: 270px;
@@ -263,6 +292,7 @@ a {
 
 .future-city {
   position: absolute;
+  z-index: 4;
   left: 0;
   right: 0;
   bottom: 0;
@@ -272,6 +302,109 @@ a {
   padding: 0 4vw;
   height: 210px;
   background: linear-gradient(180deg, transparent, rgba(7, 9, 20, 0.82));
+}
+
+.about-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1fr);
+  gap: clamp(28px, 5vw, 70px);
+  align-items: center;
+}
+
+.feature-visual {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.34), 0 0 44px rgba(110, 231, 249, 0.12);
+}
+
+.feature-visual img {
+  width: 100%;
+  height: 100%;
+  min-height: 410px;
+  object-fit: cover;
+  filter: saturate(1.08);
+  transform: scale(1.02);
+  animation: cinematicFloat 16s ease-in-out infinite reverse;
+}
+
+.feature-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 9, 20, 0.02), rgba(7, 9, 20, 0.38)),
+    radial-gradient(circle at 28% 24%, rgba(143, 255, 203, 0.22), transparent 26%);
+}
+
+.feature-orbit {
+  position: absolute;
+  border: 1px solid rgba(110, 231, 249, 0.34);
+  border-radius: 50%;
+  box-shadow: 0 0 34px rgba(110, 231, 249, 0.18);
+}
+
+.feature-orbit-one {
+  right: 8%;
+  top: 10%;
+  width: 120px;
+  height: 120px;
+  animation: rotatePortal 16s linear infinite;
+}
+
+.feature-orbit-two {
+  left: -34px;
+  bottom: 10%;
+  width: 180px;
+  height: 180px;
+  border-color: rgba(255, 122, 138, 0.3);
+  animation: rotatePortal 22s linear infinite reverse;
+}
+
+.nomination-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.nomination-card > :not(.nomination-visual) {
+  position: relative;
+  z-index: 2;
+}
+
+.nomination-visual {
+  position: relative;
+  z-index: 1;
+  height: 154px;
+  margin: -12px -12px 22px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nomination-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  transition: transform 0.7s ease;
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.nomination-card:hover .nomination-visual img {
+  transform: scale(1.1);
+}
+
+.nomination-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 44%, rgba(7, 9, 20, 0.72)),
+    radial-gradient(circle at 78% 22%, rgba(255, 255, 255, 0.2), transparent 18%);
 }
 
 .future-city span {
@@ -313,9 +446,38 @@ a {
   min-height: 420px;
 }
 
+.art-image,
+.art-image-vignette {
+  position: absolute;
+  inset: 0;
+}
+
+.art-image {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.05);
+  filter: saturate(1.08) contrast(1.03);
+  transition: transform 0.7s ease, filter 0.7s ease;
+}
+
+.gallery-card:hover .art-image {
+  transform: scale(1.1);
+  filter: saturate(1.18) contrast(1.06);
+}
+
+.art-image-vignette {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(7, 9, 20, 0.02), rgba(7, 9, 20, 0.7)),
+    radial-gradient(circle at 50% 35%, rgba(110, 231, 249, 0.08), transparent 32%);
+}
+
 .art-grid {
   position: absolute;
   inset: 0;
+  z-index: 2;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
@@ -325,6 +487,7 @@ a {
 
 .art-core {
   position: absolute;
+  z-index: 3;
   left: 50%;
   top: 48%;
   width: 96px;
@@ -339,6 +502,7 @@ a {
 
 .art-path {
   position: absolute;
+  z-index: 3;
   left: 18%;
   right: 18%;
   bottom: 18%;
@@ -351,6 +515,7 @@ a {
 
 .art-skyline {
   position: absolute;
+  z-index: 3;
   left: 8%;
   right: 8%;
   bottom: 0;
@@ -401,6 +566,7 @@ a {
 
 .art-sparks i {
   position: absolute;
+  z-index: 4;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -622,6 +788,20 @@ a {
   backdrop-filter: blur(18px);
 }
 
+.future-zone {
+  background:
+    linear-gradient(135deg, rgba(7, 9, 20, 0.88), rgba(31, 18, 45, 0.74), rgba(7, 9, 20, 0.86)),
+    var(--zone-image),
+    rgba(255, 255, 255, 0.06);
+  background-size: cover;
+  background-position: center;
+}
+
+.future-zone > * {
+  position: relative;
+  z-index: 1;
+}
+
 .final-panel {
   text-align: center;
 }
@@ -677,6 +857,16 @@ a {
   50% {
     transform: scale(1.25);
     opacity: 1;
+  }
+}
+
+@keyframes cinematicFloat {
+  0%,
+  100% {
+    transform: scale(1.03) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate3d(-1.4%, -1.2%, 0);
   }
 }
 
@@ -739,6 +929,15 @@ a {
 }
 
 @media (max-width: 760px) {
+  .about-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-visual,
+  .feature-visual img {
+    min-height: 280px;
+  }
+
   .portal-one {
     left: 45%;
     top: 6%;
@@ -752,7 +951,8 @@ a {
   }
 
   .future-city {
-    height: 160px;
+    height: 120px;
+    opacity: 0.68;
   }
 
   .art-visual-large {

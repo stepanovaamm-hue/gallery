@@ -1,10 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { futureZones, nominations, works } from './data/works.js';
 
+const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
+
+const visualAssets = {
+  hero: assetPath('images/hero-gallery-future.png'),
+  gallery: assetPath('images/gallery-exhibition-future.png'),
+  comic: assetPath('images/comic-zone-future.png'),
+  story: assetPath('images/story-zone-future.png'),
+};
+
 const nominationStyles = {
   Рисунок: 'from-aurora/25 via-mint/[.15] to-transparent',
   Комикс: 'from-violet/25 via-coral/[.15] to-transparent',
   Рассказ: 'from-sun/25 via-aurora/[.15] to-transparent',
+};
+
+const nominationImages = {
+  Рисунок: visualAssets.gallery,
+  Комикс: visualAssets.comic,
+  Рассказ: visualAssets.story,
+};
+
+const workImages = {
+  Рисунок: visualAssets.gallery,
+  Комикс: visualAssets.comic,
+  Рассказ: visualAssets.story,
 };
 
 function useRevealOnScroll() {
@@ -30,6 +51,7 @@ function useRevealOnScroll() {
 function PortalScene() {
   return (
     <div className="hero-scene" aria-hidden="true">
+      <img className="hero-illustration" src={visualAssets.hero} alt="" />
       <div className="star-field" />
       <div className="portal portal-one" />
       <div className="portal portal-two" />
@@ -59,6 +81,7 @@ function ArtworkVisual({ work, large = false }) {
     '--c2': colors[1],
     '--c3': colors[2],
   };
+  const image = workImages[work.nomination];
 
   return (
     <div
@@ -66,6 +89,8 @@ function ArtworkVisual({ work, large = false }) {
       style={style}
       aria-hidden="true"
     >
+      <img className="art-image" src={image} alt="" />
+      <div className="art-image-vignette" />
       <div className="art-grid" />
       <div className="art-skyline">
         {Array.from({ length: 8 }).map((_, index) => (
@@ -86,9 +111,12 @@ function ArtworkVisual({ work, large = false }) {
 function NominationCard({ nomination }) {
   return (
     <article
-      className={`glass-card min-h-[220px] bg-gradient-to-br ${nominationStyles[nomination.title]}`}
+      className={`glass-card nomination-card min-h-[360px] bg-gradient-to-br ${nominationStyles[nomination.title]}`}
       data-reveal
     >
+      <div className="nomination-visual" aria-hidden="true">
+        <img src={nominationImages[nomination.title]} alt="" />
+      </div>
       <div className="mb-7 flex items-start justify-between gap-4">
         <span className="text-sm font-semibold text-mint">{nomination.marker}</span>
         <span className="h-12 w-12 rounded-lg border border-white/[.15] bg-white/[.08] text-center text-2xl leading-[3rem] text-white/[.85]">
@@ -244,16 +272,21 @@ export default function App() {
       </section>
 
       <section id="about" className="section-shell border-t border-white/[.08]">
-        <div className="section-grid">
+        <div className="about-layout">
           <div data-reveal>
             <p className="eyebrow">О проекте</p>
             <h2 className="section-title">Праздничная цифровая выставка</h2>
+            <p className="section-text mt-7">
+              Ко Дню защиты детей мы собрали творческие работы детей сотрудников ПравоТех. Ребята
+              представили, каким может быть будущее вместе с технологиями, ИИ и ПравоТех. Каждая
+              работа — это маленький портал в мир фантазии, открытий и смелых идей.
+            </p>
           </div>
-          <p className="section-text" data-reveal>
-            Ко Дню защиты детей мы собрали творческие работы детей сотрудников ПравоТех. Ребята
-            представили, каким может быть будущее вместе с технологиями, ИИ и ПравоТех. Каждая
-            работа — это маленький портал в мир фантазии, открытий и смелых идей.
-          </p>
+          <div className="feature-visual" data-reveal aria-hidden="true">
+            <img src={visualAssets.gallery} alt="" />
+            <span className="feature-orbit feature-orbit-one" />
+            <span className="feature-orbit feature-orbit-two" />
+          </div>
         </div>
       </section>
 
@@ -288,7 +321,10 @@ export default function App() {
       </section>
 
       <section className="section-shell">
-        <div className="future-zone">
+        <div
+          className="future-zone"
+          style={{ '--zone-image': `url("${visualAssets.hero}")` }}
+        >
           <div className="max-w-2xl" data-reveal>
             <p className="eyebrow">Зоны будущего</p>
             <h2 className="section-title">Маршруты по цифровому городу</h2>
