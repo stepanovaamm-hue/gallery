@@ -1,5 +1,19 @@
 export const works = [
   {
+    id: 7,
+    title: 'Мой ПравоДень',
+    author: 'Губанов Матвей',
+    age: 15,
+    nomination: 'Рисунок',
+    visual: 'city',
+    palette: ['#ffd166', '#6ee7f9', '#8fffcb'],
+    image: 'works/matvey-gubanov/moy-pravoden-drawing.png',
+    animation: 'works/matvey-gubanov/moy-pravoden-animation.mp4',
+    authorPhoto: 'works/matvey-gubanov/matvey-gubanov.jpg',
+    description:
+      'Футуристичный ПравоДень в зелёном городе будущего: высокие башни, солнечный горизонт, воздушный транспорт и спокойные маршруты для людей среди парков и технологий. В тестовой анимации рисунок оживает и превращается в мягкую цифровую сцену.',
+  },
+  {
     id: 1,
     title: 'Город добрых алгоритмов',
     author: 'Алиса Смирнова',

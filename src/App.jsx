@@ -102,11 +102,11 @@ function ArtworkVisual({ work, large = false }) {
     '--c2': colors[1],
     '--c3': colors[2],
   };
-  const image = workImages[work.nomination];
+  const image = work.image ? assetPath(work.image) : workImages[work.nomination];
 
   return (
     <div
-      className={`art-visual art-${work.visual} ${large ? 'art-visual-large' : ''}`}
+      className={`art-visual art-${work.visual} ${work.image ? 'art-uploaded' : ''} ${large ? 'art-visual-large' : ''}`}
       style={style}
       aria-hidden="true"
     >
@@ -125,6 +125,32 @@ function ArtworkVisual({ work, large = false }) {
           <i key={index} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function WorkMedia({ work }) {
+  if (work.animation) {
+    return (
+      <div className="work-media work-media-video">
+        <video
+          src={assetPath(work.animation)}
+          poster={work.image ? assetPath(work.image) : undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <ModalEffect work={work} />
+        <span className="media-label">Анимированная версия</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-white/[.12] bg-ink/60">
+      <ArtworkVisual work={work} large />
+      <ModalEffect work={work} />
     </div>
   );
 }
@@ -224,15 +250,21 @@ function WorkModal({ work, onClose }) {
           <span className="sr-only">Закрыть</span>
         </button>
         <div className="grid gap-7 md:grid-cols-[1.08fr_.92fr]">
-          <div className="relative overflow-hidden rounded-lg border border-white/[.12] bg-ink/60">
-            <ArtworkVisual work={work} large />
-            <ModalEffect work={work} />
-          </div>
+          <WorkMedia work={work} />
           <div className="flex flex-col justify-center">
             <span className="badge mb-4 w-max">{work.nomination}</span>
             <h2 id="modal-title" className="text-3xl font-semibold leading-tight text-white">
               {work.title}
             </h2>
+            {work.authorPhoto ? (
+              <div className="author-strip mt-5">
+                <img src={assetPath(work.authorPhoto)} alt="" />
+                <div>
+                  <p>Автор работы</p>
+                  <strong>{work.author}</strong>
+                </div>
+              </div>
+            ) : null}
             <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
               <div className="info-line">
                 <dt>Автор</dt>
@@ -263,6 +295,7 @@ function ZoneButton({ zone, index }) {
 export default function App() {
   const [selectedWork, setSelectedWork] = useState(null);
   const highlightedWorks = useMemo(() => works, []);
+  const nominationCount = useMemo(() => new Set(works.map((work) => work.nomination)).size, []);
 
   useRevealOnScroll();
 
@@ -289,8 +322,8 @@ export default function App() {
               </a>
             </div>
             <div className="hero-metrics" aria-label="Краткая информация о выставке">
-              <span>6 работ</span>
-              <span>3 номинации</span>
+              <span>{works.length} работ</span>
+              <span>{nominationCount} номинации</span>
               <span>День защиты детей</span>
             </div>
           </div>
