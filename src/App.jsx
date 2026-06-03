@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { futureZones, nominations, works } from './data/works.js';
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
@@ -130,19 +130,90 @@ function ArtworkVisual({ work, large = false }) {
 }
 
 function WorkMedia({ work }) {
+  const videoRef = useRef(null);
+  const [animationState, setAnimationState] = useState(work.animation ? 'waiting' : 'idle');
+
+  useEffect(() => {
+    if (!work.animation) return undefined;
+
+    const video = videoRef.current;
+    setAnimationState('waiting');
+    if (video) video.pause();
+
+    const timer = window.setTimeout(() => {
+      setAnimationState('playing');
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timer);
+      const activeVideo = videoRef.current;
+      if (activeVideo) activeVideo.pause();
+    };
+  }, [work.id, work.animation]);
+
+  useEffect(() => {
+    if (!work.animation || animationState !== 'playing') return undefined;
+
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    video.currentTime = 0;
+    video
+      .play()
+      .catch(() => setAnimationState('stopped'));
+
+    return () => {
+      video.pause();
+    };
+  }, [animationState, work.animation]);
+
+  const startAnimation = () => {
+    setAnimationState('playing');
+  };
+
+  const stopAnimation = () => {
+    const video = videoRef.current;
+    if (video) video.pause();
+    setAnimationState('stopped');
+  };
+
   if (work.animation) {
+    const poster = work.image ? assetPath(work.image) : undefined;
+    const isWaiting = animationState === 'waiting';
+    const isPlaying = animationState === 'playing';
+    const mediaLabel = isWaiting
+      ? 'Старт через 3 секунды'
+      : isPlaying
+        ? 'Анимированная версия'
+        : 'Анимация остановлена';
+
     return (
-      <div className="work-media work-media-video">
-        <video
-          src={assetPath(work.animation)}
-          poster={work.image ? assetPath(work.image) : undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
-        <ModalEffect work={work} />
-        <span className="media-label">Анимированная версия</span>
+      <div className={`work-media work-media-video ${isPlaying ? 'is-playing' : 'is-static'}`}>
+        {poster ? <img className="work-poster" src={poster} alt="" /> : null}
+        {isPlaying ? (
+          <video
+            ref={videoRef}
+            src={assetPath(work.animation)}
+            poster={poster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+        ) : null}
+        {isPlaying ? <ModalEffect work={work} /> : null}
+        <div className="media-controls">
+          <span className="media-label">{mediaLabel}</span>
+          <button
+            className="animation-toggle"
+            type="button"
+            onClick={isPlaying ? stopAnimation : startAnimation}
+            disabled={isWaiting}
+          >
+            {isPlaying || isWaiting ? 'Остановить анимацию' : 'Запустить анимацию'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -249,9 +320,9 @@ function WorkModal({ work, onClose }) {
           <span aria-hidden="true">×</span>
           <span className="sr-only">Закрыть</span>
         </button>
-        <div className="grid gap-7 md:grid-cols-[1.08fr_.92fr]">
+        <div className="modal-grid">
           <WorkMedia work={work} />
-          <div className="flex flex-col justify-center">
+          <div className="modal-details flex flex-col justify-center">
             <span className="badge mb-4 w-max">{work.nomination}</span>
             <h2 id="modal-title" className="text-3xl font-semibold leading-tight text-white">
               {work.title}
