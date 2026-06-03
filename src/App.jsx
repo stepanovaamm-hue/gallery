@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { futureZones, nominations, works } from './data/works.js';
+import * as worksData from './data/works.js';
+import AdminPanel, { useAdminData } from './AdminPanel.jsx';
 
-const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
+const { futureZones, nominations: defaultNominations, works: defaultWorks, sectionsConfig: exportedSections, DATA_VERSION: dataVersion } = worksData;
 
-const visualAssets = {
-  hero: assetPath('images/hero-gallery-future.png'),
-  gallery: assetPath('images/gallery-exhibition-future.png'),
-  comic: assetPath('images/comic-zone-future.png'),
-  story: assetPath('images/story-zone-future.png'),
+const assetPath = (path) => {
+  if (!path) return null;
+  if (path.startsWith('data:')) return path; // base64 uploaded
+  return `${import.meta.env.BASE_URL}${path}`;
 };
+
+const getVisualAsset = (key) => `${import.meta.env.BASE_URL}images/${key === 'hero' ? 'hero-gallery' : key === 'gallery' ? 'gallery-exhibition' : key === 'comic' ? 'comic-zone' : 'story-zone'}-future.png`;
 
 const nominationStyles = {
   Рисунок: 'from-aurora/25 via-mint/[.15] to-transparent',
@@ -17,15 +19,15 @@ const nominationStyles = {
 };
 
 const nominationImages = {
-  Рисунок: visualAssets.gallery,
-  Комикс: visualAssets.comic,
-  Рассказ: visualAssets.story,
+  Рисунок: getVisualAsset('gallery'),
+  Комикс: getVisualAsset('comic'),
+  Рассказ: getVisualAsset('story'),
 };
 
 const workImages = {
-  Рисунок: visualAssets.gallery,
-  Комикс: visualAssets.comic,
-  Рассказ: visualAssets.story,
+  Рисунок: getVisualAsset('gallery'),
+  Комикс: getVisualAsset('comic'),
+  Рассказ: getVisualAsset('story'),
 };
 
 function useRevealOnScroll() {
@@ -42,7 +44,6 @@ function useRevealOnScroll() {
       },
       { threshold: 0.16 },
     );
-
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, []);
@@ -51,17 +52,11 @@ function useRevealOnScroll() {
 function HeroScene() {
   return (
     <div className="hero-scene" aria-hidden="true">
-      <img className="hero-illustration" src={visualAssets.hero} alt="" />
+      <img className="hero-illustration" src={getVisualAsset('hero')} alt="" />
       <div className="hero-aurora" />
-      <div className="hero-pathways">
-        <span />
-        <span />
-        <span />
-      </div>
+      <div className="hero-pathways"><span /><span /><span /></div>
       <div className="hero-particles">
-        {Array.from({ length: 16 }).map((_, index) => (
-          <span key={index} />
-        ))}
+        {Array.from({ length: 16 }).map((_, i) => <span key={i} />)}
       </div>
     </div>
   );
@@ -73,40 +68,45 @@ function HeroShowcase() {
       <div className="hero-portal-shell">
         <div className="hero-portal-rim" />
         <div className="hero-portal-window">
-          <img src={visualAssets.gallery} alt="" />
+          <img src={getVisualAsset('gallery')} alt="" />
           <div className="hero-portal-sheen" />
         </div>
-        <div className="hero-art-card hero-art-card-one">
-          <img src={visualAssets.comic} alt="" />
-        </div>
-        <div className="hero-art-card hero-art-card-two">
-          <img src={visualAssets.story} alt="" />
-        </div>
-        <div className="hero-art-card hero-art-card-three">
-          <img src={visualAssets.gallery} alt="" />
-        </div>
+        <div className="hero-art-card hero-art-card-one"><img src={getVisualAsset('comic')} alt="" /></div>
+        <div className="hero-art-card hero-art-card-two"><img src={getVisualAsset('story')} alt="" /></div>
+        <div className="hero-art-card hero-art-card-three"><img src={getVisualAsset('gallery')} alt="" /></div>
       </div>
-      <div className="hero-holo-panel">
-        <span />
-        <span />
-        <span />
-      </div>
+      <div className="hero-holo-panel"><span /><span /><span /></div>
     </div>
   );
 }
 
+function CardAnimation({ type }) {
+  if (!type || type === 'none') return null;
+  if (type === 'comic') return (
+    <div className="comic-strip" aria-hidden="true"><span /><span /><span /></div>
+  );
+  if (type === 'story') return (
+    <div className="story-glow" aria-hidden="true"><span /><span /><span /></div>
+  );
+  if (type === 'sparkle') return (
+    <div className="art-sparks sparkle-effect" aria-hidden="true">
+      {Array.from({ length: 9 }).map((_, i) => <i key={i} />)}
+    </div>
+  );
+  // default: drawing
+  return (
+    <div className="drawing-motion" aria-hidden="true"><span /><span /><span /></div>
+  );
+}
+
 function ArtworkVisual({ work, large = false }) {
-  const colors = work.palette;
-  const style = {
-    '--c1': colors[0],
-    '--c2': colors[1],
-    '--c3': colors[2],
-  };
-  const image = work.image ? assetPath(work.image) : workImages[work.nomination];
+  const colors = work.palette || ['#6ee7f9', '#ffd166', '#8fffcb'];
+  const style = { '--c1': colors[0], '--c2': colors[1], '--c3': colors[2] };
+  const image = work.image ? (work.image.startsWith('data:') ? work.image : assetPath(work.image)) : workImages[work.nomination];
 
   return (
     <div
-      className={`art-visual art-${work.visual} ${work.image ? 'art-uploaded' : ''} ${large ? 'art-visual-large' : ''}`}
+      className={`art-visual art-${work.visual || 'city'} ${work.image ? 'art-uploaded' : ''} ${large ? 'art-visual-large' : ''}`}
       style={style}
       aria-hidden="true"
     >
@@ -114,16 +114,12 @@ function ArtworkVisual({ work, large = false }) {
       <div className="art-image-vignette" />
       <div className="art-grid" />
       <div className="art-skyline">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <span key={index} />
-        ))}
+        {Array.from({ length: 8 }).map((_, i) => <span key={i} />)}
       </div>
       <div className="art-core" />
       <div className="art-path" />
       <div className="art-sparks">
-        {Array.from({ length: 9 }).map((_, index) => (
-          <i key={index} />
-        ))}
+        {Array.from({ length: 9 }).map((_, i) => <i key={i} />)}
       </div>
     </div>
   );
@@ -131,89 +127,71 @@ function ArtworkVisual({ work, large = false }) {
 
 function WorkMedia({ work }) {
   const videoRef = useRef(null);
-  const [animationState, setAnimationState] = useState(work.animation ? 'waiting' : 'idle');
+  const [animState, setAnimState] = useState(work.animation ? 'waiting' : 'idle');
+  const [mediaRatio, setMediaRatio] = useState(null);
+
+  useEffect(() => {
+    setMediaRatio(null);
+  }, [work.id, work.image, work.animation]);
 
   useEffect(() => {
     if (!work.animation) return undefined;
-
     const video = videoRef.current;
-    setAnimationState('waiting');
+    setAnimState('waiting');
     if (video) video.pause();
-
-    const timer = window.setTimeout(() => {
-      setAnimationState('playing');
-    }, 3000);
-
-    return () => {
-      window.clearTimeout(timer);
-      const activeVideo = videoRef.current;
-      if (activeVideo) activeVideo.pause();
-    };
+    const timer = window.setTimeout(() => setAnimState('playing'), 3000);
+    return () => { window.clearTimeout(timer); if (videoRef.current) videoRef.current.pause(); };
   }, [work.id, work.animation]);
 
   useEffect(() => {
-    if (!work.animation || animationState !== 'playing') return undefined;
-
+    if (!work.animation || animState !== 'playing') return undefined;
     const video = videoRef.current;
     if (!video) return undefined;
-
     video.currentTime = 0;
-    video
-      .play()
-      .catch(() => setAnimationState('stopped'));
+    video.play().catch(() => setAnimState('stopped'));
+    return () => { video.pause(); };
+  }, [animState, work.animation]);
 
-    return () => {
-      video.pause();
-    };
-  }, [animationState, work.animation]);
-
-  const startAnimation = () => {
-    setAnimationState('playing');
+  const animSrc = work.animation?.startsWith('data:') ? work.animation : assetPath(work.animation);
+  const posterSrc = work.image ? (work.image.startsWith('data:') ? work.image : assetPath(work.image)) : undefined;
+  const mediaStyle = mediaRatio ? { '--work-ratio': mediaRatio } : undefined;
+  const updateImageRatio = (event) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (naturalWidth && naturalHeight) {
+      setMediaRatio(naturalWidth / naturalHeight);
+    }
   };
-
-  const stopAnimation = () => {
-    const video = videoRef.current;
-    if (video) video.pause();
-    setAnimationState('stopped');
+  const updateVideoRatio = (event) => {
+    const { videoWidth, videoHeight } = event.currentTarget;
+    if (videoWidth && videoHeight) {
+      setMediaRatio(videoWidth / videoHeight);
+    }
   };
 
   if (work.animation) {
-    const poster = work.image ? assetPath(work.image) : undefined;
-    const isWaiting = animationState === 'waiting';
-    const isPlaying = animationState === 'playing';
-    const mediaLabel = isWaiting
-      ? 'Старт через 3 секунды'
-      : isPlaying
-        ? 'Анимированная версия'
-        : 'Анимация остановлена';
-
+    const isWaiting = animState === 'waiting';
+    const isPlaying = animState === 'playing';
+    const mediaLabel = isWaiting ? 'Старт через 3 секунды' : isPlaying ? 'Анимированная версия' : 'Анимация остановлена';
     return (
-      <div className={`work-media work-media-video ${isPlaying ? 'is-playing' : 'is-static'}`}>
-        {poster ? <img className="work-poster" src={poster} alt="" /> : null}
-        {isPlaying ? (
-          <video
-            ref={videoRef}
-            src={assetPath(work.animation)}
-            poster={poster}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-          />
-        ) : null}
+      <div className={`work-media work-media-video ${isPlaying ? 'is-playing' : 'is-static'}`} style={mediaStyle}>
+        {posterSrc ? <img className="work-static-image work-poster-inline" src={posterSrc} alt="" onLoad={updateImageRatio} /> : null}
+        {isPlaying ? <video ref={videoRef} src={animSrc} poster={posterSrc} autoPlay muted loop playsInline preload="auto" onLoadedMetadata={updateVideoRatio} /> : null}
         {isPlaying ? <ModalEffect work={work} /> : null}
         <div className="media-controls">
           <span className="media-label">{mediaLabel}</span>
-          <button
-            className="animation-toggle"
-            type="button"
-            onClick={isPlaying ? stopAnimation : startAnimation}
-            disabled={isWaiting}
-          >
+          <button className="animation-toggle" type="button" onClick={() => isPlaying ? setAnimState('stopped') : setAnimState('playing')} disabled={isWaiting}>
             {isPlaying || isWaiting ? 'Остановить анимацию' : 'Запустить анимацию'}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (posterSrc) {
+    return (
+      <div className="work-media work-media-image" style={mediaStyle}>
+        <img className="work-static-image" src={posterSrc} alt={work.title} onLoad={updateImageRatio} />
+        <ModalEffect work={work} />
       </div>
     );
   }
@@ -228,10 +206,7 @@ function WorkMedia({ work }) {
 
 function NominationCard({ nomination }) {
   return (
-    <article
-      className={`glass-card nomination-card min-h-[360px] bg-gradient-to-br ${nominationStyles[nomination.title]}`}
-      data-reveal
-    >
+    <article className={`glass-card nomination-card min-h-[360px] bg-gradient-to-br ${nominationStyles[nomination.title]}`} data-reveal>
       <div className="nomination-visual" aria-hidden="true">
         <img src={nominationImages[nomination.title]} alt="" />
       </div>
@@ -250,14 +225,16 @@ function NominationCard({ nomination }) {
 function WorkCard({ work, onOpen }) {
   return (
     <article className="gallery-card group" data-reveal>
-      <ArtworkVisual work={work} />
+      <div className="relative overflow-hidden">
+        <ArtworkVisual work={work} />
+        <CardAnimation type={work.cardAnimation || (work.nomination === 'Комикс' ? 'comic' : work.nomination === 'Рассказ' ? 'story' : 'drawing')} />
+      </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="badge">{work.nomination}</span>
-          <span className="text-sm text-white/[.52]">{work.age} лет</span>
         </div>
         <h3 className="text-xl font-semibold leading-snug text-white">{work.title}</h3>
-        <p className="mt-2 text-sm text-white/[.62]">{work.author}</p>
+        <p className="mt-2 text-sm text-white/[.62]">{work.author}, {work.age} лет</p>
         <button className="primary-button mt-6 w-full" type="button" onClick={() => onOpen(work)}>
           Открыть работу
         </button>
@@ -267,50 +244,22 @@ function WorkCard({ work, onOpen }) {
 }
 
 function ModalEffect({ work }) {
-  if (work.nomination === 'Комикс') {
-    return (
-      <div className="comic-strip" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-    );
-  }
-
-  if (work.nomination === 'Рассказ') {
-    return (
-      <div className="story-glow" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-    );
-  }
-
-  return (
-    <div className="drawing-motion" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-    </div>
-  );
+  const fallback = work.nomination === 'Комикс' ? 'comic' : work.nomination === 'Рассказ' ? 'story' : 'drawing';
+  return <CardAnimation type={work.cardAnimation || fallback} />;
 }
 
 function WorkModal({ work, onClose }) {
   useEffect(() => {
     if (!work) return undefined;
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
     document.body.classList.add('overflow-hidden');
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.classList.remove('overflow-hidden');
-    };
+    return () => { document.removeEventListener('keydown', onKey); document.body.classList.remove('overflow-hidden'); };
   }, [work, onClose]);
 
   if (!work) return null;
+
+  const authorPhotoSrc = work.authorPhoto ? (work.authorPhoto.startsWith('data:') ? work.authorPhoto : assetPath(work.authorPhoto)) : null;
 
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -320,33 +269,43 @@ function WorkModal({ work, onClose }) {
           <span aria-hidden="true">×</span>
           <span className="sr-only">Закрыть</span>
         </button>
-        <div className="modal-grid">
-          <WorkMedia work={work} />
-          <div className="modal-details flex flex-col justify-center">
-            <span className="badge mb-4 w-max">{work.nomination}</span>
-            <h2 id="modal-title" className="text-3xl font-semibold leading-tight text-white">
-              {work.title}
-            </h2>
-            {work.authorPhoto ? (
-              <div className="author-strip mt-5">
-                <img src={assetPath(work.authorPhoto)} alt="" />
-                <div>
-                  <p>Автор работы</p>
-                  <strong>{work.author}</strong>
-                </div>
+
+        {/* NEW LAYOUT: badge + title at top, then grid */}
+        <div className="modal-top-header">
+          <span className="badge">{work.nomination}</span>
+          <h2 id="modal-title" className="modal-main-title">{work.title}</h2>
+        </div>
+
+        <div className="modal-info-layout">
+          <div className="modal-author-photo-wrap">
+            {authorPhotoSrc ? (
+              <img src={authorPhotoSrc} alt={work.author} className="modal-author-photo" />
+            ) : (
+              <div className="modal-author-photo-placeholder">
+                {work.author ? work.author[0] : '?'}
               </div>
-            ) : null}
-            <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-              <div className="info-line">
-                <dt>Автор</dt>
-                <dd>{work.author}</dd>
-              </div>
-              <div className="info-line">
-                <dt>Возраст</dt>
-                <dd>{work.age} лет</dd>
-              </div>
-            </dl>
-            <p className="mt-6 text-base leading-7 text-white/[.72]">{work.description}</p>
+            )}
+            <p className="modal-author-photo-label">фото автора</p>
+          </div>
+
+          <div className="modal-author-info">
+            <div className="modal-info-card">
+              <p className="modal-author-name-label">имя</p>
+              <p className="modal-author-name">{work.author}</p>
+            </div>
+            <div className="modal-info-card">
+              <p className="modal-author-age-label">возраст</p>
+              <p className="modal-author-age">{work.age} лет</p>
+            </div>
+          </div>
+
+          <div className="modal-description-block">
+            <p className="modal-description-label">фантазийное описание</p>
+            <p className="modal-description-text">{work.description}</p>
+          </div>
+
+          <div className="modal-work-full">
+            <WorkMedia work={work} />
           </div>
         </div>
       </div>
@@ -364,123 +323,125 @@ function ZoneButton({ zone, index }) {
 }
 
 export default function App() {
+  const { works, updateWorks, sections, updateSections } = useAdminData(defaultWorks, exportedSections, dataVersion);
   const [selectedWork, setSelectedWork] = useState(null);
-  const highlightedWorks = useMemo(() => works, []);
-  const nominationCount = useMemo(() => new Set(works.map((work) => work.nomination)).size, []);
+
+  const visibleWorks = useMemo(() => works.filter((w) => !w.hidden), [works]);
+  const nominationCount = useMemo(() => new Set(visibleWorks.map((w) => w.nomination)).size, [visibleWorks]);
 
   useRevealOnScroll();
 
+  const s = sections;
+  const isVisible = (key) => s[key]?.visible !== false;
+
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">
-      <section id="top" className="hero-section">
-        <HeroScene />
-        <div className="hero-content">
-          <div className="hero-copy" data-reveal>
-            <p className="eyebrow">Будущее с ПравоТех глазами детей</p>
-            <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
-              Виртуальная галерея будущего
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/[.76] sm:text-xl">
-              Добро пожаловать в виртуальную галерею, где детские мечты о будущем становятся
-              цифровыми историями.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a className="primary-button" href="#gallery">
-                Смотреть работы
-              </a>
-              <a className="secondary-button" href="#about">
-                О проекте
-              </a>
+      {isVisible('hero') && (
+        <section id="top" className="hero-section">
+          <HeroScene />
+          <div className="hero-content">
+            <div className="hero-copy" data-reveal>
+              <p className="eyebrow">{s.hero?.eyebrow || 'Будущее с ПравоТех глазами детей'}</p>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
+                {s.hero?.title || 'Виртуальная галерея будущего'}
+              </h1>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-white/[.76] sm:text-xl">
+                {s.hero?.subtitle || 'Добро пожаловать в виртуальную галерею, где детские мечты о будущем становятся цифровыми историями.'}
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <a className="primary-button" href="#gallery">{s.hero?.primaryBtn || 'Смотреть работы'}</a>
+                <a className="secondary-button" href="#about">{s.hero?.secondaryBtn || 'О проекте'}</a>
+              </div>
+              <div className="hero-metrics" aria-label="Краткая информация о выставке">
+                <span>{visibleWorks.length} работ</span>
+                <span>{nominationCount} номинации</span>
+                <span>{s.hero?.metric || 'День защиты детей'}</span>
+              </div>
             </div>
-            <div className="hero-metrics" aria-label="Краткая информация о выставке">
-              <span>{works.length} работ</span>
-              <span>{nominationCount} номинации</span>
-              <span>День защиты детей</span>
+            <HeroShowcase />
+          </div>
+        </section>
+      )}
+
+      {isVisible('about') && (
+        <section id="about" className="section-shell border-t border-white/[.08]">
+          <div className="about-layout">
+            <div data-reveal>
+              <p className="eyebrow">{s.about?.eyebrow || 'О проекте'}</p>
+              <h2 className="section-title">{s.about?.title || 'Праздничная цифровая выставка'}</h2>
+              <p className="section-text mt-7">{s.about?.text || ''}</p>
+            </div>
+            <div className="feature-visual" data-reveal aria-hidden="true">
+              <img src={getVisualAsset('gallery')} alt="" />
+              <span className="feature-orbit feature-orbit-one" />
+              <span className="feature-orbit feature-orbit-two" />
             </div>
           </div>
-          <HeroShowcase />
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section id="about" className="section-shell border-t border-white/[.08]">
-        <div className="about-layout">
-          <div data-reveal>
-            <p className="eyebrow">О проекте</p>
-            <h2 className="section-title">Праздничная цифровая выставка</h2>
-            <p className="section-text mt-7">
-              Ко Дню защиты детей мы собрали творческие работы детей сотрудников ПравоТех. Ребята
-              представили, каким может быть будущее вместе с технологиями, ИИ и ПравоТех. Каждая
-              работа — это маленький портал в мир фантазии, открытий и смелых идей.
+      {isVisible('nominations') && (
+        <section className="section-shell">
+          <div className="mb-10 max-w-3xl" data-reveal>
+            <p className="eyebrow">{s.nominations?.eyebrow || 'Номинации'}</p>
+            <h2 className="section-title">{s.nominations?.title || 'Три способа оживить мечту'}</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {(s.nominations?.items || defaultNominations).map((n) => <NominationCard key={n.title} nomination={n} />)}
+          </div>
+        </section>
+      )}
+
+      {isVisible('gallery') && (
+        <section id="gallery" className="section-shell gallery-band">
+          <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
+            <div>
+              <p className="eyebrow">{s.gallery?.eyebrow || 'Галерея работ'}</p>
+              <h2 className="section-title">{s.gallery?.title || 'Порталы детских историй'}</h2>
+            </div>
+            <p className="max-w-md text-base leading-7 text-white/[.64]">
+              {s.gallery?.description || 'Каждая карточка открывает отдельную цифровую сцену с автором, историей и небольшим анимационным эффектом.'}
             </p>
           </div>
-          <div className="feature-visual" data-reveal aria-hidden="true">
-            <img src={visualAssets.gallery} alt="" />
-            <span className="feature-orbit feature-orbit-one" />
-            <span className="feature-orbit feature-orbit-two" />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleWorks.map((work) => <WorkCard key={work.id} work={work} onOpen={setSelectedWork} />)}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="section-shell">
-        <div className="mb-10 max-w-3xl" data-reveal>
-          <p className="eyebrow">Номинации</p>
-          <h2 className="section-title">Три способа оживить мечту</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {nominations.map((nomination) => (
-            <NominationCard key={nomination.title} nomination={nomination} />
-          ))}
-        </div>
-      </section>
-
-      <section id="gallery" className="section-shell gallery-band">
-        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
-          <div>
-            <p className="eyebrow">Галерея работ</p>
-            <h2 className="section-title">Порталы детских историй</h2>
+      {isVisible('zones') && (
+        <section className="section-shell">
+          <div className="future-zone" style={{ '--zone-image': `url("${getVisualAsset('hero')}")` }}>
+            <div className="max-w-2xl" data-reveal>
+              <p className="eyebrow">{s.zones?.eyebrow || 'Зоны будущего'}</p>
+              <h2 className="section-title">{s.zones?.title || 'Маршруты по цифровому городу'}</h2>
+            </div>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {(s.zones?.items || futureZones).map((zone, i) => <ZoneButton key={`${zone}-${i}`} zone={zone} index={i} />)}
+            </div>
           </div>
-          <p className="max-w-md text-base leading-7 text-white/[.64]">
-            Каждая карточка открывает отдельную цифровую сцену с автором, историей и небольшим
-            анимационным эффектом.
-          </p>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {highlightedWorks.map((work) => (
-            <WorkCard key={work.id} work={work} onOpen={setSelectedWork} />
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="section-shell">
-        <div
-          className="future-zone"
-          style={{ '--zone-image': `url("${visualAssets.hero}")` }}
-        >
-          <div className="max-w-2xl" data-reveal>
-            <p className="eyebrow">Зоны будущего</p>
-            <h2 className="section-title">Маршруты по цифровому городу</h2>
+      {isVisible('final') && (
+        <section className="section-shell pb-24">
+          <div className="final-panel" data-reveal>
+            <p className="mx-auto max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              {s.final?.text || 'Будущее создают не только технологии. Его создают мечты, фантазия и смелость детей смотреть дальше.'}
+            </p>
+            <a className="primary-button mt-9" href="#top">{s.final?.button || 'Вернуться в начало'}</a>
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {futureZones.map((zone, index) => (
-              <ZoneButton key={zone} zone={zone} index={index} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section-shell pb-24">
-        <div className="final-panel" data-reveal>
-          <p className="mx-auto max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            Будущее создают не только технологии. Его создают мечты, фантазия и смелость детей
-            смотреть дальше.
-          </p>
-          <a className="primary-button mt-9" href="#top">
-            Вернуться в начало
-          </a>
-        </div>
-      </section>
+        </section>
+      )}
 
       <WorkModal work={selectedWork} onClose={() => setSelectedWork(null)} />
+
+      <AdminPanel
+        works={works}
+        onUpdateWorks={updateWorks}
+        sections={sections}
+        onUpdateSections={updateSections}
+      />
     </main>
   );
 }
