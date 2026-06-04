@@ -420,7 +420,7 @@ export default function App() {
               <h2 className="section-title">{s.gallery?.title || 'Порталы детских историй'}</h2>
             </div>
             <p className="max-w-md text-base leading-7 text-white/[.64]">
-              {s.gallery?.description || 'Каждая карточка открывает отдельную цифровую сцену с автором, историей и небольшим анимационным эффектом.'}
+              {s.gallery?.description || }
             </p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
