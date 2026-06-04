@@ -200,7 +200,6 @@ function WorkMedia({ work }) {
     return (
       <div className="work-media work-media-image" style={mediaStyle}>
         <img className="work-static-image" src={posterSrc} alt={work.title} onLoad={updateImageRatio} />
-        <ModalEffect work={work} />
       </div>
     );
   }
@@ -234,18 +233,21 @@ function NominationCard({ nomination }) {
 function WorkCard({ work, onOpen }) {
   return (
     <article className="gallery-card group" data-reveal>
-      <button className="work-preview-button relative overflow-hidden" type="button" onClick={() => onOpen(work)} aria-label={`??????? ?????? ${work.title}`}>
-        <ArtworkVisual work={work} />
-        <CardAnimation type={work.cardAnimation || (work.nomination === '????????????' ? 'comic' : work.nomination === '??????????????' ? 'story' : 'drawing')} />
+      <button className="work-preview-button" type="button" onClick={() => onOpen(work)} aria-label={"Открыть работу " + work.title}>
+        <img
+          className="work-card-image"
+          src={work.image?.startsWith('data:') ? work.image : (work.image ? assetPath(work.image) : workImages[work.nomination])}
+          alt={work.title}
+        />
       </button>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="badge">{work.nomination}</span>
         </div>
         <h3 className="text-xl font-semibold leading-snug text-white">{work.title}</h3>
-        <p className="mt-2 text-sm text-white/[.62]">{formatAuthorName(work.author)}, {work.age} ???</p>
+        <p className="mt-2 text-sm text-white/[.62]">{formatAuthorName(work.author)}, {work.age} лет</p>
         <button className="primary-button mt-6 w-full" type="button" onClick={() => onOpen(work)}>
-          ??????? ??????
+          Открыть работу
         </button>
       </div>
     </article>
@@ -275,11 +277,11 @@ function WorkModal({ work, onClose }) {
 
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button className="modal-backdrop" type="button" aria-label="??????? ??????" onClick={onClose} />
+      <button className="modal-backdrop" type="button" aria-label="Закрыть работу ??????" onClick={onClose} />
       <div className={"modal-panel " + (expanded ? "modal-panel-expanded" : "")}>
         <button className="icon-button absolute right-4 top-4 z-10" type="button" onClick={onClose}>
           <span aria-hidden="true">?</span>
-          <span className="sr-only">???????</span>
+          <span className="sr-only">Закрыть</span>
         </button>
 
         <div className="modal-top-header">
@@ -290,21 +292,21 @@ function WorkModal({ work, onClose }) {
         <div className="modal-info-layout">
           <div className="modal-author-info">
             <div className="modal-info-card">
-              <p className="modal-author-name-label">???</p>
+              <p className="modal-author-name-label">имя</p>
               <p className="modal-author-name">{formatAuthorName(work.author)}</p>
             </div>
             <div className="modal-info-card">
-              <p className="modal-author-age-label">???????</p>
-              <p className="modal-author-age">{work.age} ???</p>
+              <p className="modal-author-age-label">возраст</p>
+              <p className="modal-author-age">{work.age} лет</p>
             </div>
           </div>
 
           <div className="modal-description-block">
-            <p className="modal-description-label">??????????? ????????</p>
+            <p className="modal-description-label">фантазийное описание</p>
             <p className="modal-description-text">{work.description}</p>
           </div>
 
-          <button className="modal-work-full modal-work-button" type="button" onClick={() => setExpanded((value) => !value)} aria-label="??????? ?????? ? ??????? ???????">
+          <button className="modal-work-full modal-work-button" type="button" onClick={() => setExpanded((value) => !value)} aria-label="Открыть работу ? ??????? ???????">
             <WorkMedia work={work} />
           </button>
         </div>
@@ -312,6 +314,7 @@ function WorkModal({ work, onClose }) {
     </div>
   );
 }
+
 function ZoneButton({ zone, index }) {
   return (
     <button className="zone-chip" type="button" style={{ '--zone-delay': `${index * 0.08}s` }} data-reveal>
@@ -320,7 +323,6 @@ function ZoneButton({ zone, index }) {
     </button>
   );
 }
-
 export default function App() {
   const { works, updateWorks, sections, updateSections } = useAdminData(defaultWorks, exportedSections, dataVersion);
   const [selectedWork, setSelectedWork] = useState(null);
