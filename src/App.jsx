@@ -12,6 +12,15 @@ const assetPath = (path) => {
 
 const getVisualAsset = (key) => `${import.meta.env.BASE_URL}images/${key === 'hero' ? 'hero-gallery' : key === 'gallery' ? 'gallery-exhibition' : key === 'comic' ? 'comic-zone' : 'story-zone'}-future.png`;
 
+function formatAuthorName(author) {
+  if (!author) return '';
+  const parts = author.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  const firstName = parts[1] || parts[0];
+  const lastInitial = parts[0]?.[0] ? `${parts[0][0]}.` : '';
+  return lastInitial ? `${firstName} ${lastInitial}` : firstName;
+}
+
 const nominationStyles = {
   Рисунок: 'from-aurora/25 via-mint/[.15] to-transparent',
   Комикс: 'from-violet/25 via-coral/[.15] to-transparent',
@@ -234,7 +243,7 @@ function WorkCard({ work, onOpen }) {
           <span className="badge">{work.nomination}</span>
         </div>
         <h3 className="text-xl font-semibold leading-snug text-white">{work.title}</h3>
-        <p className="mt-2 text-sm text-white/[.62]">{work.author}, {work.age} лет</p>
+        <p className="mt-2 text-sm text-white/[.62]">{formatAuthorName(work.author)}, {work.age} лет</p>
         <button className="primary-button mt-6 w-full" type="button" onClick={() => onOpen(work)}>
           Открыть работу
         </button>
@@ -259,8 +268,6 @@ function WorkModal({ work, onClose }) {
 
   if (!work) return null;
 
-  const authorPhotoSrc = work.authorPhoto ? (work.authorPhoto.startsWith('data:') ? work.authorPhoto : assetPath(work.authorPhoto)) : null;
-
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <button className="modal-backdrop" type="button" aria-label="Закрыть работу" onClick={onClose} />
@@ -277,21 +284,10 @@ function WorkModal({ work, onClose }) {
         </div>
 
         <div className="modal-info-layout">
-          <div className="modal-author-photo-wrap">
-            {authorPhotoSrc ? (
-              <img src={authorPhotoSrc} alt={work.author} className="modal-author-photo" />
-            ) : (
-              <div className="modal-author-photo-placeholder">
-                {work.author ? work.author[0] : '?'}
-              </div>
-            )}
-            <p className="modal-author-photo-label">фото автора</p>
-          </div>
-
           <div className="modal-author-info">
             <div className="modal-info-card">
               <p className="modal-author-name-label">имя</p>
-              <p className="modal-author-name">{work.author}</p>
+              <p className="modal-author-name">{formatAuthorName(work.author)}</p>
             </div>
             <div className="modal-info-card">
               <p className="modal-author-age-label">возраст</p>
