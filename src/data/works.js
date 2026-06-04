@@ -215,6 +215,7 @@ export const works = [
       "#ffd166"
     ],
     "image": "works/kirill-shchiptsov/kosmicheskiy-mir-cherez-10-let.png",
+    "animation": "https://disk.360.yandex.ru/i/G6agJqgxhXpTQQ",
     "authorPhoto": "works/kirill-shchiptsov/author.jpg",
     "cardAnimation": "story",
     "hidden": false,

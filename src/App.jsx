@@ -12,6 +12,26 @@ const assetPath = (path) => {
 
 const getVisualAsset = (key) => `${import.meta.env.BASE_URL}images/${key === 'hero' ? 'hero-gallery' : key === 'gallery' ? 'gallery-exhibition' : key === 'comic' ? 'comic-zone' : 'story-zone'}-future.png`;
 
+function isYandexPublicVideoLink(url) {
+  return typeof url === 'string' && /^https:\/\/disk\.360\.yandex\.ru\/i\//.test(url);
+}
+
+async function resolveAnimationUrl(animation) {
+  if (!animation) return null;
+  if (animation.startsWith('data:')) return animation;
+  if (animation.startsWith('http')) {
+    if (!isYandexPublicVideoLink(animation)) return animation;
+    const apiUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(animation)}`;
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`Yandex API ${response.status}`);
+    }
+    const data = await response.json();
+    return data?.href || null;
+  }
+  return assetPath(animation);
+}
+
 function formatAuthorName(author) {
   if (!author) return '';
   const parts = author.trim().split(/\s+/).filter(Boolean);
@@ -138,30 +158,48 @@ function WorkMedia({ work }) {
   const videoRef = useRef(null);
   const [animState, setAnimState] = useState(work.animation ? 'waiting' : 'idle');
   const [mediaRatio, setMediaRatio] = useState(null);
+  const [animSrc, setAnimSrc] = useState(null);
 
   useEffect(() => {
     setMediaRatio(null);
   }, [work.id, work.image, work.animation]);
 
   useEffect(() => {
+    let cancelled = false;
+    setAnimSrc(null);
     if (!work.animation) return undefined;
+
+    resolveAnimationUrl(work.animation)
+      .then((url) => {
+        if (!cancelled) setAnimSrc(url);
+      })
+      .catch(() => {
+        if (!cancelled) setAnimSrc(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [work.animation, work.id]);
+
+  useEffect(() => {
+    if (!work.animation || !animSrc) return undefined;
     const video = videoRef.current;
     setAnimState('waiting');
     if (video) video.pause();
     const timer = window.setTimeout(() => setAnimState('playing'), 3000);
     return () => { window.clearTimeout(timer); if (videoRef.current) videoRef.current.pause(); };
-  }, [work.id, work.animation]);
+  }, [animSrc, work.id, work.animation]);
 
   useEffect(() => {
-    if (!work.animation || animState !== 'playing') return undefined;
+    if (!work.animation || !animSrc || animState !== 'playing') return undefined;
     const video = videoRef.current;
     if (!video) return undefined;
     video.currentTime = 0;
     video.play().catch(() => setAnimState('stopped'));
     return () => { video.pause(); };
-  }, [animState, work.animation]);
+  }, [animSrc, animState, work.animation]);
 
-  const animSrc = work.animation?.startsWith('data:') ? work.animation : assetPath(work.animation);
   const posterSrc = work.image ? (work.image.startsWith('data:') ? work.image : assetPath(work.image)) : undefined;
   const mediaStyle = mediaRatio ? { '--work-ratio': mediaRatio } : undefined;
   const updateImageRatio = (event) => {
