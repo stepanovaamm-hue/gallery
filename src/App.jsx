@@ -140,17 +140,7 @@ function ArtworkVisual({ work, large = false }) {
       aria-hidden="true"
     >
       <img className="art-image" src={image} alt="" />
-      <div className="art-image-vignette" />
-      <div className="art-grid" />
-      <div className="art-skyline">
-        {Array.from({ length: 8 }).map((_, i) => <span key={i} />)}
-      </div>
-      <div className="art-core" />
-      <div className="art-path" />
-      <div className="art-sparks">
-        {Array.from({ length: 9 }).map((_, i) => <i key={i} />)}
-      </div>
-    </div>
+<div className="art-image-vignette" />
   );
 }
 
