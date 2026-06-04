@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as worksData from './data/works.js';
 import AdminPanel, { useAdminData } from './AdminPanel.jsx';
 
-const { futureZones, nominations: defaultNominations, works: defaultWorks, sectionsConfig: exportedSections, DATA_VERSION: dataVersion } = worksData;
+  const { works: defaultWorks, sectionsConfig: exportedSections, DATA_VERSION: dataVersion } = worksData;
 
 const assetPath = (path) => {
   if (!path) return null;
@@ -234,30 +234,31 @@ function NominationCard({ nomination }) {
 function WorkCard({ work, onOpen }) {
   return (
     <article className="gallery-card group" data-reveal>
-      <div className="relative overflow-hidden">
+      <button className="work-preview-button relative overflow-hidden" type="button" onClick={() => onOpen(work)} aria-label={`??????? ?????? ${work.title}`}>
         <ArtworkVisual work={work} />
-        <CardAnimation type={work.cardAnimation || (work.nomination === 'Комикс' ? 'comic' : work.nomination === 'Рассказ' ? 'story' : 'drawing')} />
-      </div>
+        <CardAnimation type={work.cardAnimation || (work.nomination === '????????????' ? 'comic' : work.nomination === '??????????????' ? 'story' : 'drawing')} />
+      </button>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="badge">{work.nomination}</span>
         </div>
         <h3 className="text-xl font-semibold leading-snug text-white">{work.title}</h3>
-        <p className="mt-2 text-sm text-white/[.62]">{formatAuthorName(work.author)}, {work.age} лет</p>
+        <p className="mt-2 text-sm text-white/[.62]">{formatAuthorName(work.author)}, {work.age} ???</p>
         <button className="primary-button mt-6 w-full" type="button" onClick={() => onOpen(work)}>
-          Открыть работу
+          ??????? ??????
         </button>
       </div>
     </article>
   );
 }
-
 function ModalEffect({ work }) {
   const fallback = work.nomination === 'Комикс' ? 'comic' : work.nomination === 'Рассказ' ? 'story' : 'drawing';
   return <CardAnimation type={work.cardAnimation || fallback} />;
 }
 
 function WorkModal({ work, onClose }) {
+  const [expanded, setExpanded] = useState(false);
+
   useEffect(() => {
     if (!work) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -266,18 +267,21 @@ function WorkModal({ work, onClose }) {
     return () => { document.removeEventListener('keydown', onKey); document.body.classList.remove('overflow-hidden'); };
   }, [work, onClose]);
 
+  useEffect(() => {
+    setExpanded(false);
+  }, [work?.id]);
+
   if (!work) return null;
 
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button className="modal-backdrop" type="button" aria-label="Закрыть работу" onClick={onClose} />
-      <div className="modal-panel">
+      <button className="modal-backdrop" type="button" aria-label="??????? ??????" onClick={onClose} />
+      <div className={"modal-panel " + (expanded ? "modal-panel-expanded" : "")}>
         <button className="icon-button absolute right-4 top-4 z-10" type="button" onClick={onClose}>
-          <span aria-hidden="true">×</span>
-          <span className="sr-only">Закрыть</span>
+          <span aria-hidden="true">?</span>
+          <span className="sr-only">???????</span>
         </button>
 
-        {/* NEW LAYOUT: badge + title at top, then grid */}
         <div className="modal-top-header">
           <span className="badge">{work.nomination}</span>
           <h2 id="modal-title" className="modal-main-title">{work.title}</h2>
@@ -286,29 +290,28 @@ function WorkModal({ work, onClose }) {
         <div className="modal-info-layout">
           <div className="modal-author-info">
             <div className="modal-info-card">
-              <p className="modal-author-name-label">имя</p>
+              <p className="modal-author-name-label">???</p>
               <p className="modal-author-name">{formatAuthorName(work.author)}</p>
             </div>
             <div className="modal-info-card">
-              <p className="modal-author-age-label">возраст</p>
-              <p className="modal-author-age">{work.age} лет</p>
+              <p className="modal-author-age-label">???????</p>
+              <p className="modal-author-age">{work.age} ???</p>
             </div>
           </div>
 
           <div className="modal-description-block">
-            <p className="modal-description-label">фантазийное описание</p>
+            <p className="modal-description-label">??????????? ????????</p>
             <p className="modal-description-text">{work.description}</p>
           </div>
 
-          <div className="modal-work-full">
+          <button className="modal-work-full modal-work-button" type="button" onClick={() => setExpanded((value) => !value)} aria-label="??????? ?????? ? ??????? ???????">
             <WorkMedia work={work} />
-          </div>
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
 function ZoneButton({ zone, index }) {
   return (
     <button className="zone-chip" type="button" style={{ '--zone-delay': `${index * 0.08}s` }} data-reveal>
@@ -323,8 +326,6 @@ export default function App() {
   const [selectedWork, setSelectedWork] = useState(null);
 
   const visibleWorks = useMemo(() => works.filter((w) => !w.hidden), [works]);
-  const nominationCount = useMemo(() => new Set(visibleWorks.map((w) => w.nomination)).size, [visibleWorks]);
-
   useRevealOnScroll();
 
   const s = sections;
@@ -350,7 +351,6 @@ export default function App() {
               </div>
               <div className="hero-metrics" aria-label="Краткая информация о выставке">
                 <span>{visibleWorks.length} работ</span>
-                <span>{nominationCount} номинации</span>
                 <span>{s.hero?.metric || 'День защиты детей'}</span>
               </div>
             </div>
@@ -376,18 +376,6 @@ export default function App() {
         </section>
       )}
 
-      {isVisible('nominations') && (
-        <section className="section-shell">
-          <div className="mb-10 max-w-3xl" data-reveal>
-            <p className="eyebrow">{s.nominations?.eyebrow || 'Номинации'}</p>
-            <h2 className="section-title">{s.nominations?.title || 'Три способа оживить мечту'}</h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {(s.nominations?.items || defaultNominations).map((n) => <NominationCard key={n.title} nomination={n} />)}
-          </div>
-        </section>
-      )}
-
       {isVisible('gallery') && (
         <section id="gallery" className="section-shell gallery-band">
           <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
@@ -401,20 +389,6 @@ export default function App() {
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visibleWorks.map((work) => <WorkCard key={work.id} work={work} onOpen={setSelectedWork} />)}
-          </div>
-        </section>
-      )}
-
-      {isVisible('zones') && (
-        <section className="section-shell">
-          <div className="future-zone" style={{ '--zone-image': `url("${getVisualAsset('hero')}")` }}>
-            <div className="max-w-2xl" data-reveal>
-              <p className="eyebrow">{s.zones?.eyebrow || 'Зоны будущего'}</p>
-              <h2 className="section-title">{s.zones?.title || 'Маршруты по цифровому городу'}</h2>
-            </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {(s.zones?.items || futureZones).map((zone, i) => <ZoneButton key={`${zone}-${i}`} zone={zone} index={i} />)}
-            </div>
           </div>
         </section>
       )}

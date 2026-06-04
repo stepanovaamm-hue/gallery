@@ -54,6 +54,14 @@ a {
     @apply flex min-h-[438px] flex-col overflow-hidden rounded-lg border border-white/[.12] bg-white/[.08] shadow-warm backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-mint/40 hover:bg-white/10;
   }
 
+  .work-preview-button {
+    @apply block w-full cursor-zoom-in border-0 bg-transparent p-0 text-left;
+  }
+
+  .work-preview-button:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-aurora/80;
+  }
+
   .badge {
     @apply rounded-md border border-white/[.12] bg-white/10 px-3 py-1 text-xs font-semibold uppercase text-mint;
   }
@@ -1522,6 +1530,30 @@ a {
   grid-area: work;
   min-width: 0;
   align-self: center;
+}
+
+.modal-work-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: zoom-in;
+  width: 100%;
+}
+
+.modal-panel-expanded {
+  width: min(1180px, 100%);
+}
+
+.modal-panel-expanded .modal-info-layout {
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.65fr);
+}
+
+.modal-panel-expanded .modal-work-full {
+  min-height: min(74svh, 760px);
+}
+
+.modal-panel-expanded .work-media {
+  min-height: min(74svh, 760px);
 }
 
 .modal-work-full .work-media {
