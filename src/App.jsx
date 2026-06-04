@@ -140,7 +140,8 @@ function ArtworkVisual({ work, large = false }) {
       aria-hidden="true"
     >
       <img className="art-image" src={image} alt="" />
-<div className="art-image-vignette" />
+      <div className="art-image-vignette" />
+    </div>
   );
 }
 
