@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const ADMIN_PASSWORD = '3';
+const ADMIN_PASSWORD = '@6140134KMS';
 
 const ANIMATION_OPTIONS = [
   { id: 'drawing', label: '✦ Световые линии (рисунок)', description: 'Горизонтальные блески' },
