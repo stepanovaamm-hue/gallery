@@ -1513,38 +1513,8 @@ a {
   align-self: center;
 }
 
-.modal-work-button {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  cursor: zoom-in;
-  width: 100%;
-}
-
-.modal-panel-expanded {
-  width: min(1180px, 100%);
-}
-
-.modal-panel-expanded .modal-info-layout {
-  grid-template-columns: minmax(0, .9fr) minmax(0, 1.65fr);
-}
-
-.modal-panel-expanded .modal-work-full {
-  min-height: min(74svh, 760px);
-}
-
-.modal-panel-expanded .work-media {
-  min-height: min(74svh, 760px);
-}
-
 .modal-work-full .work-media {
   min-height: 0;
-}
-
-.modal-work-button .work-media {
-  box-shadow: none;
-  border-color: transparent;
-  background: transparent;
 }
 
 @media (max-width: 560px) {

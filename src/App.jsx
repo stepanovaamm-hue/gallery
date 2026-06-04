@@ -259,7 +259,6 @@ function ModalEffect({ work }) {
 }
 
 function WorkModal({ work, onClose }) {
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!work) return undefined;
@@ -269,18 +268,15 @@ function WorkModal({ work, onClose }) {
     return () => { document.removeEventListener('keydown', onKey); document.body.classList.remove('overflow-hidden'); };
   }, [work, onClose]);
 
-  useEffect(() => {
-    setExpanded(false);
-  }, [work?.id]);
 
   if (!work) return null;
 
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <button className="modal-backdrop" type="button" aria-label="Закрыть работу ??????" onClick={onClose} />
-      <div className={"modal-panel " + (expanded ? "modal-panel-expanded" : "")}>
+      <div className="modal-panel">
         <button className="icon-button absolute right-4 top-4 z-10" type="button" onClick={onClose}>
-          <span aria-hidden="true">?</span>
+          <span aria-hidden="true">×</span>
           <span className="sr-only">Закрыть</span>
         </button>
 
@@ -306,9 +302,9 @@ function WorkModal({ work, onClose }) {
             <p className="modal-description-text">{work.description}</p>
           </div>
 
-          <button className="modal-work-full modal-work-button" type="button" onClick={() => setExpanded((value) => !value)} aria-label="Открыть работу ? ??????? ???????">
+          <div className="modal-work-full">
             <WorkMedia work={work} />
-          </button>
+          </div>
         </div>
       </div>
     </div>
