@@ -1,5 +1,5 @@
 // Файл сгенерирован админкой. Замените им src/data/works.js и залейте на GitHub.
-export const DATA_VERSION = 1788451546012;
+export const DATA_VERSION = 1788451546016;
 
 export const works = [
   {
@@ -59,7 +59,7 @@ export const works = [
     "nomination": "Рисунок",
     "visual": "robot",
     "palette": ["#a78bfa", "#6ee7f9", "#ffd166"],
-    "image": "works/invention-of-the-future/04-deryusheva-marina/artwork.jpg",
+    "image": "works/invention-of-the-future/04-deryusheva-marina/artwork-updated.jpg",
     "animation": "works/invention-of-the-future/04-deryusheva-marina/animation.mp4",
     "authorPhoto": null,
     "cardAnimation": "none",
@@ -139,7 +139,7 @@ export const works = [
     "nomination": "Рисунок",
     "visual": "space",
     "palette": ["#6ee7f9", "#a78bfa", "#ffd166"],
-    "image": "works/invention-of-the-future/09-taran-yaroslav/artwork.jpg",
+    "image": "works/invention-of-the-future/09-taran-yaroslav/artwork-updated.png",
     "animation": "works/invention-of-the-future/09-taran-yaroslav/animation.mp4",
     "authorPhoto": null,
     "cardAnimation": "none",
@@ -187,7 +187,7 @@ export const works = [
     "nomination": "Рисунок",
     "visual": "city",
     "palette": ["#6ee7f9", "#ffd166", "#8fffcb"],
-    "image": "works/invention-of-the-future/12-ivanaevskiy-roman/artwork.jpg",
+    "image": "works/invention-of-the-future/12-ivanaevskiy-roman/artwork-updated.png",
     "animation": "works/invention-of-the-future/12-ivanaevskiy-roman/animation.mp4",
     "authorPhoto": null,
     "cardAnimation": "none",
@@ -219,7 +219,7 @@ export const works = [
     "nomination": "Рисунок",
     "visual": "robot",
     "palette": ["#ffd166", "#ff7a8a", "#8fffcb"],
-    "image": "works/invention-of-the-future/14-vorontsova-eva/artwork.jpg",
+    "image": "works/invention-of-the-future/14-vorontsova-eva/artwork-updated.png",
     "animation": "works/invention-of-the-future/14-vorontsova-eva/animation.mp4",
     "authorPhoto": null,
     "cardAnimation": "none",
