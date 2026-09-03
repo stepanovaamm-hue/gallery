@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ command, isPreview }) => ({
+export default defineConfig(() => ({
   base: './',
   plugins: [react()],
   server: {
@@ -17,26 +17,6 @@ export default defineConfig(({ command, isPreview }) => ({
     port: 4173,
   },
   optimizeDeps: {
-    noDiscovery: true,
-    include: [],
+    include: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
   },
-  environments:
-    command === 'serve' && !isPreview
-      ? {
-          client: {
-            optimizeDeps: {
-              disabled: true,
-              noDiscovery: true,
-              include: [],
-            },
-          },
-        }
-      : {
-          client: {
-            optimizeDeps: {
-              noDiscovery: true,
-              include: [],
-            },
-          },
-        },
 }));

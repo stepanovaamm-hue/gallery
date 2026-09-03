@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { contests, DEFAULT_CONTEST_ID } from './data/contests.js';
 
 const ADMIN_PASSWORD = '@6140134KMS';
 
@@ -101,6 +102,7 @@ export default function AdminPanel({ works, onUpdateWorks, sections, onUpdateSec
 
   const newWorkTemplate = () => ({
     id: Date.now(),
+    contestId: contests[0].id,
     title: '',
     author: '',
     age: '',
@@ -294,6 +296,12 @@ export default function AdminPanel({ works, onUpdateWorks, sections, onUpdateSec
                   {/* Basic info */}
                   <div className="admin-section-group">
                     <p className="admin-group-label">Основное</p>
+                    <div className="admin-field mb-3">
+                      <label className="admin-label">Конкурс</label>
+                      <select className="admin-input" value={editingWork.contestId || DEFAULT_CONTEST_ID} onChange={(e) => setEditingWork(p => ({ ...p, contestId: e.target.value }))}>
+                        {contests.map((contest) => <option key={contest.id} value={contest.id}>{contest.title}</option>)}
+                      </select>
+                    </div>
                     <div className="admin-grid-2">
                       <div className="admin-field">
                         <label className="admin-label">Название *</label>
@@ -428,7 +436,7 @@ export default function AdminPanel({ works, onUpdateWorks, sections, onUpdateSec
                 {/* Tabs */}
                 <div className="admin-tabs">
                   <button className={`admin-tab ${tab === 'works' ? 'active' : ''}`} onClick={() => setTab('works')}>Работы ({works.length})</button>
-                  <button className={`admin-tab ${tab === 'sections' ? 'active' : ''}`} onClick={() => setTab('sections')}>Секции сайта</button>
+                  <button className={`admin-tab ${tab === 'sections' ? 'active' : ''}`} onClick={() => setTab('sections')}>Раздел «Будущее с ПравоТех»</button>
                 </div>
 
                 {tab === 'works' && (
@@ -455,7 +463,7 @@ export default function AdminPanel({ works, onUpdateWorks, sections, onUpdateSec
                           </div>
                           <div className="admin-work-info">
                             <p className="admin-work-title">{work.title || '—'}</p>
-                            <p className="admin-work-meta">{work.author} · {work.age} лет · {work.nomination}</p>
+                            <p className="admin-work-meta">{work.author} · {work.age} лет · {work.nomination} · {contests.find((contest) => contest.id === (work.contestId || DEFAULT_CONTEST_ID))?.title}</p>
                             {work.hidden && <span className="admin-work-hidden-badge">Скрыта</span>}
                           </div>
                           <div className="admin-work-actions">

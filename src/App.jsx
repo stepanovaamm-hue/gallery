@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as worksData from './data/works.js';
 import AdminPanel, { useAdminData } from './AdminPanel.jsx';
+import { contests, DEFAULT_CONTEST_ID } from './data/contests.js';
 
   const { works: defaultWorks, sectionsConfig: exportedSections, DATA_VERSION: dataVersion } = worksData;
 
@@ -59,7 +60,7 @@ const workImages = {
   Рассказ: getVisualAsset('story'),
 };
 
-function useRevealOnScroll() {
+function useRevealOnScroll(routeKey) {
   useEffect(() => {
     const elements = document.querySelectorAll('[data-reveal]');
     const observer = new IntersectionObserver(
@@ -75,7 +76,7 @@ function useRevealOnScroll() {
     );
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
-  }, []);
+  }, [routeKey]);
 }
 
 function HeroScene() {
@@ -150,9 +151,11 @@ function WorkMedia({ work }) {
   const [animState, setAnimState] = useState(work.animation ? 'waiting' : 'idle');
   const [mediaRatio, setMediaRatio] = useState(null);
   const [animSrc, setAnimSrc] = useState(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     setMediaRatio(null);
+    setIsMuted(true);
   }, [work.id, work.image, work.animation]);
 
   useEffect(() => {
@@ -205,6 +208,16 @@ function WorkMedia({ work }) {
       setMediaRatio(videoWidth / videoHeight);
     }
   };
+  const toggleSound = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const nextMuted = !isMuted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+    if (!nextMuted && video.paused) {
+      video.play().catch(() => setAnimState('stopped'));
+    }
+  };
 
   if (work.animation) {
     const isWaiting = animState === 'waiting';
@@ -213,13 +226,20 @@ function WorkMedia({ work }) {
     return (
       <div className={`work-media work-media-video ${isPlaying ? 'is-playing' : 'is-static'}`} style={mediaStyle}>
         {posterSrc ? <img className="work-static-image work-poster-inline" src={posterSrc} alt="" onLoad={updateImageRatio} /> : null}
-        {isPlaying ? <video ref={videoRef} src={animSrc} poster={posterSrc} autoPlay muted loop playsInline preload="auto" onLoadedMetadata={updateVideoRatio} /> : null}
+        {isPlaying ? <video ref={videoRef} src={animSrc} poster={posterSrc} autoPlay muted={isMuted} loop playsInline preload="auto" onLoadedMetadata={updateVideoRatio} /> : null}
         {isPlaying ? <ModalEffect work={work} /> : null}
         <div className="media-controls">
           <span className="media-label">{mediaLabel}</span>
-          <button className="animation-toggle" type="button" onClick={() => isPlaying ? setAnimState('stopped') : setAnimState('playing')} disabled={isWaiting}>
-            {isPlaying || isWaiting ? 'Остановить анимацию' : 'Запустить анимацию'}
-          </button>
+          <div className="media-actions">
+            {isPlaying ? (
+              <button className="animation-toggle sound-toggle" type="button" onClick={toggleSound} aria-pressed={!isMuted}>
+                {isMuted ? 'Включить звук' : 'Выключить звук'}
+              </button>
+            ) : null}
+            <button className="animation-toggle" type="button" onClick={() => isPlaying ? setAnimState('stopped') : setAnimState('playing')} disabled={isWaiting}>
+              {isPlaying || isWaiting ? 'Остановить анимацию' : 'Запустить анимацию'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -282,6 +302,23 @@ function WorkCard({ work, onOpen }) {
     </article>
   );
 }
+
+function PlaceholderCard({ index }) {
+  return (
+    <article className="gallery-card placeholder-card" data-reveal aria-label={`Место для будущей работы ${index}`}>
+      <div className="placeholder-visual" aria-hidden="true">
+        <span className="placeholder-number">{String(index).padStart(2, '0')}</span>
+        <span className="placeholder-orbit" />
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <span className="badge w-fit">Место для работы</span>
+        <h3 className="mt-4 text-xl font-semibold leading-snug text-white">Изобретение № {index}</h3>
+        <p className="mt-2 text-sm leading-6 text-white/[.62]">Изображение, описание и анимация будут добавлены позже.</p>
+        <span className="placeholder-state mt-auto pt-6">Ожидает загрузки</span>
+      </div>
+    </article>
+  );
+}
 function ModalEffect({ work }) {
   const fallback = work.nomination === 'Комикс' ? 'comic' : work.nomination === 'Рассказ' ? 'story' : 'drawing';
   return <CardAnimation type={work.cardAnimation || fallback} />;
@@ -302,7 +339,7 @@ function WorkModal({ work, onClose }) {
 
   return (
     <div className="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button className="modal-backdrop" type="button" aria-label="Закрыть работу ??????" onClick={onClose} />
+      <button className="modal-backdrop" type="button" aria-label="Закрыть работу" onClick={onClose} />
       <div className="modal-panel">
         <button className="icon-button absolute right-4 top-4 z-10" type="button" onClick={onClose}>
           <span aria-hidden="true">×</span>
@@ -340,96 +377,198 @@ function WorkModal({ work, onClose }) {
   );
 }
 
-function ZoneButton({ zone, index }) {
+function goToSection(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function ContestCard({ contest, worksCount, index }) {
+  const isUpcoming = contest.workLimit && worksCount === 0;
   return (
-    <button className="zone-chip" type="button" style={{ '--zone-delay': `${index * 0.08}s` }} data-reveal>
-      <span className="zone-icon" aria-hidden="true" />
-      {zone}
-    </button>
+    <article className={`contest-card contest-card-${contest.accent}`} data-reveal>
+      <a className="contest-card-link" href={`#/contest/${contest.id}`} aria-label={`Открыть конкурс «${contest.title}»`}>
+        <div className="contest-cover">
+          <img src={getVisualAsset(contest.cover)} alt="" />
+          {isUpcoming ? <div className="contest-cover-grid" aria-hidden="true">{Array.from({ length: 15 }).map((_, i) => <span key={i} />)}</div> : null}
+          <span className="contest-index">{String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <div className="contest-card-body">
+          <div className="contest-card-meta">
+            <span className="badge">{contest.eyebrow}</span>
+            <span>{isUpcoming ? `${contest.workLimit} мест` : `${worksCount} работ`}</span>
+          </div>
+          <h2>{contest.title}</h2>
+          <p>{contest.description}</p>
+          <span className="contest-open">Открыть галерею <span aria-hidden="true">→</span></span>
+        </div>
+      </a>
+    </article>
   );
 }
-export default function App() {
-  const { works, updateWorks, sections, updateSections } = useAdminData(defaultWorks, exportedSections, dataVersion);
-  const [selectedWork, setSelectedWork] = useState(null);
 
-  const visibleWorks = useMemo(() => works.filter((w) => !w.hidden), [works]);
-  useRevealOnScroll();
+function PortalHome({ works }) {
+  const visibleWorks = works.filter((work) => !work.hidden);
+  return (
+    <>
+      <section id="top" className="hero-section portal-hero">
+        <HeroScene />
+        <div className="hero-content">
+          <div className="hero-copy" data-reveal>
+            <p className="eyebrow">Постоянный портал детского творчества</p>
+            <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">Галерея будущего</h1>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/[.76] sm:text-xl">Здесь живут разные конкурсы ПравоТех — новые идеи появляются рядом с уже собранными детскими историями.</p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <button className="primary-button" type="button" onClick={() => goToSection('contests')}>Выбрать конкурс</button>
+            </div>
+            <div className="hero-metrics" aria-label="Краткая информация о портале">
+              <span>{contests.length} конкурса</span>
+              <span>{visibleWorks.length} опубликованных работ</span>
+            </div>
+          </div>
+          <HeroShowcase />
+        </div>
+      </section>
 
-  const s = sections;
-  const isVisible = (key) => s[key]?.visible !== false;
+      <section id="contests" className="section-shell contest-showcase border-t border-white/[.08]">
+        <div className="contest-heading" data-reveal>
+          <div>
+            <p className="eyebrow">Галереи конкурсов</p>
+            <h2 className="section-title">Выберите портал</h2>
+          </div>
+          <p>Свежий конкурс всегда стоит первым. Завершённые коллекции остаются открытыми и сохраняют все работы.</p>
+        </div>
+        <div className="contest-grid">
+          {contests.map((contest, index) => (
+            <ContestCard
+              key={contest.id}
+              contest={contest}
+              index={index}
+              worksCount={visibleWorks.filter((work) => (work.contestId || DEFAULT_CONTEST_ID) === contest.id).length}
+            />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ContestInformation({ contest }) {
+  return (
+    <section id="about" className="section-shell contest-information border-t border-white/[.08]">
+      <div className="contest-summary">
+        <div data-reveal>
+          <p className="eyebrow">О конкурсе</p>
+          <h2 className="section-title">{contest.aboutTitle}</h2>
+          <p className="section-text mt-7">{contest.description}</p>
+        </div>
+        <div className="contest-result" data-reveal>
+          <span className="contest-result-number" aria-hidden="true">15</span>
+          <div>
+            <p className="contest-info-label">Результаты конкурса</p>
+            <h3>{contest.resultsTitle}</h3>
+            <p>{contest.resultsText}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ContestPage({ contest, works, sections, onOpenWork }) {
+  const contestWorks = works.filter((work) => !work.hidden && (work.contestId || DEFAULT_CONTEST_ID) === contest.id);
+  const placeholderCount = Math.max(0, (contest.workLimit || contestWorks.length) - contestWorks.length);
+  const isLegacy = contest.id === DEFAULT_CONTEST_ID;
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-white">
-      {isVisible('hero') && (
-        <section id="top" className="hero-section">
-          <HeroScene />
-          <div className="hero-content">
-            <div className="hero-copy" data-reveal>
-              <p className="eyebrow">{s.hero?.eyebrow || 'Будущее с ПравоТех глазами детей'}</p>
-              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
-                {s.hero?.title || 'Виртуальная галерея будущего'}
-              </h1>
-              <p className="mt-7 max-w-2xl text-lg leading-8 text-white/[.76] sm:text-xl">
-                {s.hero?.subtitle || 'Добро пожаловать в виртуальную галерею, где детские мечты о будущем становятся цифровыми историями.'}
-              </p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <a className="primary-button" href="#gallery">{s.hero?.primaryBtn || 'Смотреть работы'}</a>
-                <a className="secondary-button" href="#about">{s.hero?.secondaryBtn || 'О проекте'}</a>
-              </div>
-              <div className="hero-metrics" aria-label="Краткая информация о выставке">
-                <span>{visibleWorks.length} работ</span>
-                <span>{s.hero?.metric || 'День защиты детей'}</span>
-              </div>
+    <>
+      <section id="top" className="hero-section contest-hero">
+        <HeroScene />
+        <a className="contest-back" href="#/">← Все конкурсы</a>
+        <div className="hero-content">
+          <div className="hero-copy" data-reveal>
+            <p className="eyebrow">{contest.eyebrow}</p>
+            <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.04] text-white sm:text-6xl lg:text-7xl">{contest.title}</h1>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/[.76] sm:text-xl">{isLegacy ? sections.hero?.subtitle : contest.description}</p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <button className="primary-button" type="button" onClick={() => goToSection('gallery')}>{contestWorks.length ? 'Смотреть работы' : 'Посмотреть будущую галерею'}</button>
+              <a className="secondary-button" href="#/">Все конкурсы</a>
             </div>
-            <HeroShowcase />
+            <div className="hero-metrics" aria-label="Краткая информация о конкурсе">
+              <span>{contest.workLimit ? `${contest.workLimit} мест` : `${contestWorks.length} работ`}</span>
+              <span>{contest.status}</span>
+            </div>
           </div>
-        </section>
-      )}
+          <HeroShowcase />
+        </div>
+      </section>
 
-      {isVisible('about') && (
+      {isLegacy ? (
         <section id="about" className="section-shell border-t border-white/[.08]">
           <div className="about-layout">
             <div data-reveal>
-              <p className="eyebrow">{s.about?.eyebrow || 'О проекте'}</p>
-              <h2 className="section-title">{s.about?.title || 'Праздничная цифровая выставка'}</h2>
-              <p className="section-text mt-7">{s.about?.text || ''}</p>
+              <p className="eyebrow">{sections.about?.eyebrow || 'О проекте'}</p>
+              <h2 className="section-title">{sections.about?.title || 'Праздничная цифровая выставка'}</h2>
+              <p className="section-text mt-7">{sections.about?.text}</p>
             </div>
             <div className="feature-visual" data-reveal aria-hidden="true">
-              <img src={getVisualAsset('gallery')} alt="" />
+              <img src={getVisualAsset(contest.cover)} alt="" />
               <span className="feature-orbit feature-orbit-one" />
               <span className="feature-orbit feature-orbit-two" />
             </div>
           </div>
         </section>
-      )}
+      ) : <ContestInformation contest={contest} />}
 
-      {isVisible('gallery') && (
-        <section id="gallery" className="section-shell gallery-band">
-          <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
-            <div>
-              <p className="eyebrow">{s.gallery?.eyebrow || 'Галерея работ'}</p>
-              <h2 className="section-title">{s.gallery?.title || 'Порталы детских историй'}</h2>
-            </div>
-            <p className="max-w-md text-base leading-7 text-white/[.64]">
-            {s.gallery?.description || ''}
-            </p>
+      <section id="gallery" className="section-shell gallery-band">
+        <div className="gallery-heading mb-10" data-reveal>
+          <div>
+            <p className="eyebrow">Галерея работ</p>
+            <h2 className="section-title">{isLegacy ? (sections.gallery?.title || contest.galleryTitle) : contest.galleryTitle}</h2>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleWorks.map((work) => <WorkCard key={work.id} work={work} onOpen={setSelectedWork} />)}
-          </div>
-        </section>
-      )}
+          <p className="max-w-md text-base leading-7 text-white/[.64]">{isLegacy ? (sections.gallery?.description || contest.galleryDescription) : contest.galleryDescription}</p>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {contestWorks.map((work) => <WorkCard key={work.id} work={work} onOpen={onOpenWork} />)}
+          {Array.from({ length: placeholderCount }).map((_, index) => <PlaceholderCard key={`placeholder-${index + 1}`} index={contestWorks.length + index + 1} />)}
+        </div>
+      </section>
 
-      {isVisible('final') && (
-        <section className="section-shell pb-24">
-          <div className="final-panel" data-reveal>
-            <p className="mx-auto max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
-              {s.final?.text || 'Будущее создают не только технологии. Его создают мечты, фантазия и смелость детей смотреть дальше.'}
-            </p>
-            <a className="primary-button mt-9" href="#top">{s.final?.button || 'Вернуться в начало'}</a>
-          </div>
-        </section>
-      )}
+      <section className="section-shell pb-24">
+        <div className="final-panel" data-reveal>
+          <p className="mx-auto max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-4xl">{isLegacy ? sections.final?.text : contest.finalText}</p>
+          <a className="secondary-button mt-9" href="#/">Вернуться к конкурсам</a>
+        </div>
+      </section>
+    </>
+  );
+}
+
+export default function App() {
+  const { works, updateWorks, sections, updateSections } = useAdminData(defaultWorks, exportedSections, dataVersion);
+  const [selectedWork, setSelectedWork] = useState(null);
+
+  const getContestFromHash = () => {
+    const match = window.location.hash.match(/^#\/contest\/([^/]+)/);
+    return match ? contests.find((contest) => contest.id === match[1]) || null : null;
+  };
+  const [activeContest, setActiveContest] = useState(getContestFromHash);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setSelectedWork(null);
+      setActiveContest(getContestFromHash());
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useRevealOnScroll(activeContest?.id || 'home');
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-ink text-white">
+      {activeContest
+        ? <ContestPage contest={activeContest} works={works} sections={sections} onOpenWork={setSelectedWork} />
+        : <PortalHome works={works} />}
 
       <WorkModal work={selectedWork} onClose={() => setSelectedWork(null)} />
 
