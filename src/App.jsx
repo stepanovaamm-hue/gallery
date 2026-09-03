@@ -236,8 +236,8 @@ function WorkMedia({ work }) {
                 {isMuted ? 'Включить звук' : 'Выключить звук'}
               </button>
             ) : null}
-            <button className="animation-toggle" type="button" onClick={() => isPlaying ? setAnimState('stopped') : setAnimState('playing')} disabled={isWaiting}>
-              {isPlaying || isWaiting ? 'Остановить анимацию' : 'Запустить анимацию'}
+            <button className="animation-toggle" type="button" onClick={() => isPlaying ? setAnimState('stopped') : setAnimState('playing')}>
+              {isPlaying ? 'Остановить анимацию' : isWaiting ? 'Запустить сейчас' : 'Запустить анимацию'}
             </button>
           </div>
         </div>
